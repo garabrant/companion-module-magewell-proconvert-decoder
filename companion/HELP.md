@@ -8,6 +8,30 @@ This module will allow you to control functions of a Magewell Pro Convert Decode
 - The Username to login
 - The Password to login
 
+## Using variables to choose a source
+
+Every option field in this module can be driven by a variable. Instead of picking
+a value from the dropdown, use the toggle on the field to switch it to an
+expression, then write an expression that returns the value you want, for example:
+
+```
+$(internal:custom_next_source)
+```
+
+This works on **Select Source Preset by Name**, **Select Source**, and
+**Select Source Preset by Index**, as well as on the matching feedbacks. A preset
+name that is not currently in the device's list is still sent to the device
+rather than being discarded, so you are not limited to the names the module has
+already discovered.
+
+The module also exposes `presetSource0`, `presetSource1`, ... for the names of
+the presets the device reports, and `sourcePresetCount` for how many there are.
+
+Note that in **Select Source Preset by Index**, index #0 is the "None" entry and
+clears the current source. The first real preset is #1, so valid preset indices
+run from 1 to `sourcePresetCount`. An index past the end of the list is ignored
+and logged, rather than clearing the output.
+
 ## Actions
 
 ### Set Video Config

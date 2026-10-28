@@ -1,29 +1,31 @@
 import { combineRgb } from '@companion-module/base'
 
+// Since base 2.0 presets are returned as two parts: the definitions keyed by id,
+// and a structure describing the sections they are grouped under in the UI.
+// The old per-preset `category` property is gone.
 export function setPresets(self) {
 	const presets = {}
 
 	const colorWhite = combineRgb(255, 255, 255)
 	const colorRed = combineRgb(255, 0, 0)
 	const colorGreen = combineRgb(0, 204, 0)
-	const colorYellow = combineRgb(255, 255, 0)
-	const colorBlue = combineRgb(0, 51, 204)
-	const colorPurple = combineRgb(255, 0, 255)
-	const colorDarkRed = combineRgb(102, 0, 0)
 	const colorBlack = combineRgb(0, 0, 0)
 
-	const colorMagewellAttention = '#ee9c26'
-	const colorMagewellActive = '#1f8eec'
-	const colorMagewellHighlight = '#edf6fe'
-	const colorMagewellMenu = '#383838'
-	const colorMagewellGrey = '#8d8d8d'
+	// CompanionButtonStyleProps declares color/bgcolor as numbers, so these
+	// Magewell brand colours cannot be CSS strings as they were previously
+	const colorMagewellAttention = combineRgb(238, 156, 38) // #ee9c26
+	const colorMagewellActive = combineRgb(31, 142, 236) // #1f8eec
+	const colorMagewellHighlight = combineRgb(237, 246, 254) // #edf6fe
+
+	// Reference this connection's own variables. The previous code hardcoded
+	// 'generic-module' here, which never resolved to anything.
+	const v = (id) => `$(${self.label}:${id})`
 
 	presets['dashboardSourceConnected'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Source Connected',
 		style: {
-			text: 'SOURCE\\n$(generic-module:sourceName)',
+			text: `SOURCE\\n${v('sourceName')}`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -32,6 +34,7 @@ export function setPresets(self) {
 		feedbacks: [
 			{
 				feedbackId: 'sourceConnected',
+				options: {},
 				style: {
 					color: colorWhite,
 					bgcolor: colorGreen,
@@ -41,11 +44,10 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardQoS'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'QoS Video/Audio Dropped Frames/Samples',
 		style: {
-			text: 'QoS\\n$(generic-module:sourceVideoDropFrames)\\n$(generic-module:sourceAudioDropSamples)',
+			text: `QoS\\n${v('sourceVideoDropFrames')}\\n${v('sourceAudioDropSamples')}`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -54,6 +56,7 @@ export function setPresets(self) {
 		feedbacks: [
 			{
 				feedbackId: 'sourceQosDrop',
+				options: {},
 				style: {
 					color: colorWhite,
 					bgcolor: colorRed,
@@ -63,11 +66,10 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardDecoding'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Decoding Video/Audio Bitrate',
 		style: {
-			text: 'Decoding\\n$(generic-module:sourceVideoBitrate) k\\n$(generic-module:sourceAudioBitrate) k',
+			text: `Decoding\\n${v('sourceVideoBitrate')} k\\n${v('sourceAudioBitrate')} k`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -77,11 +79,10 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardJitter'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Jitter Video/Audio',
 		style: {
-			text: 'Jitter\\n$(generic-module:sourceVideoJitter) ms\\n$(generic-module:sourceAudioJitter) ms',
+			text: `Jitter\\n${v('sourceVideoJitter')} ms\\n${v('sourceAudioJitter')} ms`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -91,11 +92,11 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardJitterBuffer'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Buffer Usage',
 		style: {
-			text: 'Buffer\\n$(generic-module:sourceBufferDuration) ms\\n$(generic-module:sourceBufferBar)',
+			// Was sourceBufferBar, which is not a variable this module defines
+			text: `Buffer\\n${v('sourceBufferDuration')} ms\\n${v('sourceBufferUsageBar')}`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -105,11 +106,10 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardVideoFmt'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Video Format',
 		style: {
-			text: 'Video\\n$(generic-module:sourceVideoHeight)$(generic-module:sourceVideoScanShort)\\n$(generic-module:sourceVideoFieldrate) Hz',
+			text: `Video\\n${v('sourceVideoHeight')}${v('sourceVideoScanShort')}\\n${v('sourceVideoFieldrate')} Hz`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -119,11 +119,10 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardAudioFmt'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Audio Format',
 		style: {
-			text: 'Audio\\n$(generic-module:sourceAudioNumChannels)x$(generic-module:sourceAudioBitCount) Bit\\n$(generic-module:sourceAudioSamplerate) Hz',
+			text: `Audio\\n${v('sourceAudioNumChannels')}x${v('sourceAudioBitCount')} Bit\\n${v('sourceAudioSamplerate')} Hz`,
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorBlack,
@@ -133,8 +132,7 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardTallyProgram'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Tally Program',
 		style: {
 			text: '⚪ TALLY\\nProgram',
@@ -151,6 +149,7 @@ export function setPresets(self) {
 		feedbacks: [
 			{
 				feedbackId: 'sourceTallyProgram',
+				options: {},
 				style: {
 					color: colorWhite,
 					bgcolor: colorRed,
@@ -160,8 +159,7 @@ export function setPresets(self) {
 	}
 
 	presets['dashboardTallyPreview'] = {
-		type: 'button',
-		category: 'Dashboard',
+		type: 'simple',
 		name: 'Tally Preview',
 		style: {
 			text: '⚪ TALLY\\nPreview',
@@ -178,6 +176,7 @@ export function setPresets(self) {
 		feedbacks: [
 			{
 				feedbackId: 'sourceTallyPreview',
+				options: {},
 				style: {
 					color: colorWhite,
 					bgcolor: colorGreen,
@@ -187,17 +186,13 @@ export function setPresets(self) {
 	}
 
 	presets['systemReboot'] = {
-		type: 'button',
-		category: 'System',
+		type: 'simple',
 		name: 'Reboot Device (Hold for 2s)',
 		style: {
 			text: 'Reboot\\n↺',
 			size: '14',
 			color: colorWhite,
 			bgcolor: colorMagewellAttention,
-		},
-		options: {
-			relativeDelay: false,
 		},
 		steps: [
 			{
@@ -218,8 +213,7 @@ export function setPresets(self) {
 	}
 
 	presets['videoFollowInput'] = {
-		type: 'button',
-		category: 'System',
+		type: 'simple',
 		name: 'Video Follow Input',
 		style: {
 			text: 'Video Follow Input',
@@ -256,8 +250,7 @@ export function setPresets(self) {
 	}
 
 	presets['audioFollowInput'] = {
-		type: 'button',
-		category: 'System',
+		type: 'simple',
 		name: 'Audio Follow Input',
 		style: {
 			text: 'Audio Follow Input',
@@ -309,13 +302,22 @@ export function setPresets(self) {
 	// #### Presets ####
 	// #################
 
+	const presetNameIds = []
+	const presetIndexIds = []
+
+	// Index 0 is always the 'None' entry, which clears the decoder rather than
+	// selecting a preset. Label it as such instead of rendering a blank button.
+	const isNone = (preset) => preset.id === ''
+
 	self.SOURCE_PRESETS.forEach((preset, index) => {
-		presets[`presetName${index}`] = {
-			type: 'button',
-			category: 'Source Presets by Name',
-			name: `Select SOURCE "${preset.id}"`,
+		const id = `presetName${index}`
+		presetNameIds.push(id)
+
+		presets[id] = {
+			type: 'simple',
+			name: isNone(preset) ? 'Clear source (None)' : `Select SOURCE "${preset.id}"`,
 			style: {
-				text: `SELECT\\nSOURCE PRESET\\n\\n${preset.id}`,
+				text: isNone(preset) ? 'CLEAR\\nSOURCE' : `SELECT\\nSOURCE PRESET\\n\\n${preset.id}`,
 				size: '7',
 				color: colorBlack,
 				bgcolor: colorWhite,
@@ -349,12 +351,14 @@ export function setPresets(self) {
 	})
 
 	self.SOURCE_PRESETS.forEach((preset, index) => {
-		presets[`presetIndex${index}`] = {
-			type: 'button',
-			category: 'Source Presets by Index',
-			name: `Select Source Preset #${index}`,
+		const id = `presetIndex${index}`
+		presetIndexIds.push(id)
+
+		presets[id] = {
+			type: 'simple',
+			name: isNone(preset) ? 'Clear source (index #0)' : `Select Source Preset #${index}`,
 			style: {
-				text: `SELECT\\nSOURCE PRESET\\nINDEX #${index}\\n\\n$(generic-module:presetSource${index})`,
+				text: `SELECT\\nSOURCE PRESET\\nINDEX #${index}\\n\\n${v(`presetSource${index}`)}`,
 				size: '7',
 				color: colorBlack,
 				bgcolor: colorWhite,
@@ -387,5 +391,43 @@ export function setPresets(self) {
 		}
 	})
 
-	return presets
+	// A section's `definitions` may be either an array of groups or, as here, a
+	// flat array of preset ids, which the host shows without a grouping level.
+	// The flat form matches what the 1.x per-preset `category` produced.
+	const structure = [
+		{
+			id: 'dashboard',
+			name: 'Dashboard',
+			definitions: [
+				'dashboardSourceConnected',
+				'dashboardQoS',
+				'dashboardDecoding',
+				'dashboardJitter',
+				'dashboardJitterBuffer',
+				'dashboardVideoFmt',
+				'dashboardAudioFmt',
+				'dashboardTallyProgram',
+				'dashboardTallyPreview',
+			],
+		},
+		{
+			id: 'system',
+			name: 'System',
+			definitions: ['systemReboot', 'videoFollowInput', 'audioFollowInput'],
+		},
+		{
+			id: 'sourcePresetsByName',
+			name: 'Source Presets by Name',
+			description: 'Select a source preset using its name, as configured on the device',
+			definitions: presetNameIds,
+		},
+		{
+			id: 'sourcePresetsByIndex',
+			name: 'Source Presets by Index',
+			description: 'Select a source preset using its position in the device preset list',
+			definitions: presetIndexIds,
+		},
+	]
+
+	return { structure, presets }
 }

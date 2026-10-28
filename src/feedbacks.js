@@ -3,6 +3,9 @@ import { combineRgb } from '@companion-module/base'
 // ##########################
 // #### Define Feedbacks ####
 // ##########################
+const expressionHint =
+	'Use the toggle on this field to switch it to an expression, so the value can come from a variable.'
+
 export function setFeedbacks(self) {
 	const feedbacks = {}
 
@@ -25,7 +28,9 @@ export function setFeedbacks(self) {
 			{
 				type: 'dropdown',
 				label: 'Preset Name',
+				tooltip: expressionHint,
 				id: 'name',
+				default: '',
 				choices: self.SOURCE_PRESETS,
 				allowCustom: true,
 			},
@@ -47,17 +52,20 @@ export function setFeedbacks(self) {
 			{
 				type: 'number',
 				label: 'Preset #',
+				tooltip:
+					'Position in the device preset list. #0 is the "None" entry, so the first real preset is #1. ' +
+					expressionHint,
 				id: 'index',
-				required: true,
 				min: 0,
-				//max: self.SOURCE_PRESETS.length - 1,
+				// max is required by the API; see the matching note in actions.js
+				max: 999,
+				asInteger: true,
 				default: 0,
 			},
 		],
 		callback: function (feedback) {
-			return feedback.options.index >= 0 && feedback.options.index < self.SOURCE_PRESETS.length
-				? self.STATUS.summaryInfo.source.name === self.SOURCE_PRESETS[feedback.options.index].id
-				: false
+			const name = self.presetNameByIndex(feedback.options.index)
+			return name === undefined ? false : self.STATUS.summaryInfo.source.name === name
 		},
 	}
 
@@ -73,9 +81,10 @@ export function setFeedbacks(self) {
 			{
 				type: 'dropdown',
 				label: 'NDI Source',
+				tooltip: expressionHint,
 				id: 'name',
+				default: '',
 				choices: self.NDI_SOURCES,
-				//default: self.NDI_SOURCES[0].id,
 				allowCustom: true,
 			},
 		],
@@ -94,7 +103,8 @@ export function setFeedbacks(self) {
 		},
 		options: [],
 		callback: function () {
-			return self.STATUS.summaryInfo.source.connected
+			// null until the first successful poll; the API expects a boolean
+			return Boolean(self.STATUS.summaryInfo.source.connected)
 		},
 	}
 
@@ -122,7 +132,7 @@ export function setFeedbacks(self) {
 		},
 		options: [],
 		callback: function () {
-			return self.STATUS.summaryInfo.source.tallyProgram
+			return Boolean(self.STATUS.summaryInfo.source.tallyProgram)
 		},
 	}
 
@@ -136,7 +146,7 @@ export function setFeedbacks(self) {
 		},
 		options: [],
 		callback: function () {
-			return self.STATUS.summaryInfo.source.tallyPreview
+			return Boolean(self.STATUS.summaryInfo.source.tallyPreview)
 		},
 	}
 

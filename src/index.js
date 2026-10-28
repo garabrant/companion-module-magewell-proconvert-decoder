@@ -1,20 +1,33 @@
-import { runEntrypoint, InstanceBase, InstanceStatus } from '@companion-module/base'
+import { InstanceBase, InstanceStatus } from '@companion-module/base'
 import { ConfigFields } from './config.js'
 import { setVariables, checkVariables } from './variables.js'
 import { setActions } from './actions.js'
 import { setFeedbacks } from './feedbacks.js'
 import { setPresets } from './presets.js'
 import { api } from './api.js'
-import crypto from 'crypto'
+import { UpgradeScripts } from './upgrades.js'
+import crypto from 'node:crypto'
+
+export { UpgradeScripts }
+
+// Build a query string, encoding every key and value.
+// Spaces become %20 rather than '+', which the device's mwapi decodes reliably.
+function buildQuery(params) {
+	return Object.entries(params)
+		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+		.join('&')
+}
 
 // ########################
 // #### Instance setup ####
 // ########################
-class MagewellProConvertDecoderInstance extends InstanceBase {
+export default class MagewellProConvertDecoderInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
 
 		this.pollID = null
+		this.controller = new AbortController()
+		this.loginPromise = null
 	}
 
 	// Cleanup when the module gets deleted or disabled.
@@ -114,22 +127,6 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 				channels: null,
 				//bitCount: null,
 				convertMode: null,
-				//ch0: null,
-				//ch1: null,
-				//ch2: null,
-				//ch3: null,
-				//ch4: null,
-				//ch5: null,
-				//ch6: null,
-				//ch7: null,
-				//ch8: null,
-				//ch9: null,
-				//ch10: null,
-				//ch11: null,
-				//ch12: null,
-				//ch13: null,
-				//ch14: null,
-				//ch15: null,
 			},
 		}
 
@@ -141,6 +138,7 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		this.NDI_SOURCES = this.emptyList()
 
 		this.session = null
+		this.loginPromise = null
 
 		this.init_variables()
 		this.init_actions()
@@ -161,7 +159,7 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		this.clearSession()
 		this.updateStatus(InstanceStatus.Disconnected, 'Config changed')
 
-		this.init(config)
+		await this.init(config)
 	}
 
 	enablePolling() {
@@ -177,23 +175,30 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 	}
 
 	setupSession(id) {
-		if (id !== null && id !== this.session) {
+		// A device that sends no Set-Cookie leaves id undefined; that is not a session
+		if (id && id !== this.session) {
 			this.log('debug', 'New session: ' + id)
 			this.session = id
 		}
 	}
 
 	clearSession() {
-		if (this.session !== null) {
+		if (this.session) {
 			this.log('debug', 'Session destroyed: ' + this.session)
-			this.session = null
 		}
+		this.session = null
 	}
 
 	async checkSession() {
-		if (this.session === null) {
-			this.session = await this.login()
-		}
+		if (this.session) return this.session
+
+		// Several callers (pullData and every sendCommand) can race here.
+		// Share one login attempt between them rather than logging in repeatedly.
+		this.loginPromise ??= this.login().finally(() => {
+			this.loginPromise = null
+		})
+
+		this.session = await this.loginPromise
 		return this.session
 	}
 
@@ -201,6 +206,35 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		return values.find((v) => v.id === key)?.label
 	}
 
+	/**
+	 * Look up a source preset name by its position in the device preset list.
+	 * Index 0 is the 'None' entry, matching the list shown in the dropdowns.
+	 * @returns {string|undefined} the name, or undefined if the index is out of range
+	 */
+	presetNameByIndex(index) {
+		const i = Number(index)
+		if (!Number.isInteger(i) || i < 0 || i >= this.SOURCE_PRESETS.length) return undefined
+		return this.SOURCE_PRESETS[i].id
+	}
+
+	/**
+	 * Point the decoder at a source.
+	 * @param {string} name preset name, or NDI source name when isNDI is true
+	 * @param {boolean} isNDI whether name refers to an NDI source rather than a preset
+	 */
+	async selectSource(name, isNDI) {
+		const value = name ?? ''
+		// An empty name clears the current source, which the device expects as an NDI name
+		await this.sendCommand('set-channel', {
+			'ndi-name': isNDI || value === '' ? 'true' : 'false',
+			name: value,
+		})
+	}
+
+	/**
+	 * Log in to the device.
+	 * @returns {Promise<string|null>} the session cookie, or null if the login failed
+	 */
 	async login() {
 		this.log('debug', 'login()')
 
@@ -209,11 +243,12 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 
 		this.updateStatus(InstanceStatus.Connecting, 'Connecting to ' + this.config.host)
 
-		let setCookie = undefined
-
-		const url =
-			`http://${this.config.host}/mwapi?method=login&id=${this.config.username}&pass=` +
-			crypto.createHash('md5').update(this.config.password).digest('hex')
+		const query = buildQuery({
+			method: 'login',
+			id: this.config.username,
+			pass: crypto.createHash('md5').update(this.config.password).digest('hex'),
+		})
+		const url = `http://${this.config.host}/mwapi?${query}`
 		this.log('debug', 'GET ' + url)
 
 		const start = Date.now()
@@ -223,8 +258,8 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 				signal: AbortSignal.any([AbortSignal.timeout(10000), this.controller.signal]),
 			})
 			if (response.ok) {
-				setCookie = response.headers.getSetCookie()[0]
-				if (this.apiStatusIsSuccess(await response.json())) {
+				const setCookie = response.headers.getSetCookie()[0]
+				if (setCookie && this.apiStatusIsSuccess(await response.json())) {
 					this.log('debug', `login successful after ${Date.now() - start}ms`)
 					this.setupSession(setCookie)
 					this.updateStatus(InstanceStatus.Ok, 'Connected to ' + this.config.host)
@@ -242,16 +277,26 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		} finally {
 			if (!this.controller.signal.aborted && this.config.polling) this.enablePolling()
 		}
+
+		// Must be null, not undefined: checkSession and sendCommand both test against null,
+		// so returning undefined would look like a live session and block any retry.
+		return null
 	}
 
-	async sendCommand(method, args = '') {
+	/**
+	 * Send a command to the device.
+	 * @param {string} method mwapi method name
+	 * @param {object} params query parameters, encoded before sending
+	 */
+	async sendCommand(method, params = {}) {
 		this.log('debug', 'sendCommand()')
 
 		const session = await this.checkSession()
 		if (session !== null) {
-			if (args !== '') args = '&' + args
+			const query = buildQuery(params)
+			const methodAndArgs = query === '' ? method : method + '&' + query
 
-			this.log('debug', 'GET mwapi?method=' + method + args)
+			this.log('debug', 'GET mwapi?method=' + methodAndArgs)
 
 			const options = {
 				signal: AbortSignal.any([AbortSignal.timeout(10000), this.controller.signal]),
@@ -259,7 +304,7 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 			}
 
 			try {
-				await this.getAPI(method + args, options)
+				await this.getAPI(methodAndArgs, options)
 				this.log('debug', 'OK')
 				this.updateStatus(InstanceStatus.Ok)
 			} catch (error) {
@@ -292,6 +337,11 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		this.log('debug', 'pullData()')
 
 		const session = await this.checkSession()
+		if (session === null) {
+			// login() has already reported the failure and scheduled the next attempt
+			this.log('debug', 'No session; skipping poll')
+			return
+		}
 
 		const params = [
 			{ method: `get-summary-info`, callback: this.get_summary_info },
@@ -317,7 +367,7 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 			this.log('debug', `...all done after ${Date.now() - start}ms`)
 
 			this.checkVariables()
-			this.checkFeedbacks()
+			this.checkAllFeedbacks()
 		} catch (error) {
 			c.abort() // cancel any OTHER pending request
 
@@ -445,7 +495,6 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 		) {
 			this.log('debug', 'NDI sources updated')
 			this.NDI_SOURCES = c
-			this.init_variables()
 			this.init_actions()
 			this.init_feedbacks()
 			this.init_presets()
@@ -487,8 +536,7 @@ class MagewellProConvertDecoderInstance extends InstanceBase {
 	// #### Instance Presets ####
 	// ##########################
 	init_presets() {
-		this.setPresetDefinitions(setPresets(this))
+		const { structure, presets } = setPresets(this)
+		this.setPresetDefinitions(structure, presets)
 	}
 }
-
-runEntrypoint(MagewellProConvertDecoderInstance, [])

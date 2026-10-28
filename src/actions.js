@@ -1,6 +1,19 @@
 // ##########################
 // #### Instance Actions ####
 // ##########################
+//
+// Note on variables: since base 2.0 every option field can be switched to
+// expression mode in the UI, so any of these can be driven by a variable
+// without the module doing anything. Companion resolves the value before the
+// callback runs, which is why there is no parseVariablesInString here.
+//
+// The name/source dropdowns keep `allowCustom: true` so that a value which is
+// not currently in the list (a preset the device has not reported yet, for
+// example) still passes validation instead of the action being skipped.
+
+const expressionHint =
+	'Use the toggle on this field to switch it to an expression, so the value can come from a variable.'
+
 export function setActions(self) {
 	const actions = {}
 
@@ -15,7 +28,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'show-title=' + action.options.show)
+			await self.sendCommand('set-video-config', { 'show-title': action.options.show })
 		},
 	}
 
@@ -30,7 +43,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'show-tally=' + action.options.show)
+			await self.sendCommand('set-video-config', { 'show-tally': action.options.show })
 		},
 	}
 
@@ -45,7 +58,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'show-vu-meter=' + action.options.show)
+			await self.sendCommand('set-video-config', { 'show-vu-meter': action.options.show })
 		},
 	}
 
@@ -66,7 +79,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'vu-meter-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'vu-meter-mode': action.options.mode })
 		},
 	}
 
@@ -81,7 +94,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'show-center-cross=' + action.options.show)
+			await self.sendCommand('set-video-config', { 'show-center-cross': action.options.show })
 		},
 	}
 
@@ -102,7 +115,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'safe-area-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'safe-area-mode': action.options.mode })
 		},
 	}
 
@@ -122,7 +135,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'ident-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'ident-mode': action.options.mode })
 		},
 	}
 
@@ -138,10 +151,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand(
-				'set-video-config',
-				'ident-text=' + (await self.parseVariablesInString(action.options.text)),
-			)
+			await self.sendCommand('set-video-config', { 'ident-text': action.options.text })
 		},
 	}
 
@@ -156,7 +166,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'h-flip=' + action.options.flip)
+			await self.sendCommand('set-video-config', { 'h-flip': action.options.flip })
 		},
 	}
 
@@ -171,7 +181,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'v-flip=' + action.options.flip)
+			await self.sendCommand('set-video-config', { 'v-flip': action.options.flip })
 		},
 	}
 
@@ -190,7 +200,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'deinterlace-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'deinterlace-mode': action.options.mode })
 		},
 	}
 
@@ -210,7 +220,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'ar-convert-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'ar-convert-mode': action.options.mode })
 		},
 	}
 
@@ -225,7 +235,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'in-auto-color-fmt=' + action.options.auto)
+			await self.sendCommand('set-video-config', { 'in-auto-color-fmt': action.options.auto })
 		},
 	}
 
@@ -244,7 +254,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'in-color-fmt=' + action.options.fmt)
+			await self.sendCommand('set-video-config', { 'in-color-fmt': action.options.fmt })
 		},
 	}
 
@@ -264,7 +274,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'switch-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'switch-mode': action.options.mode })
 		},
 	}
 
@@ -280,7 +290,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-video-config', 'follow-input-mode=' + action.options.mode)
+			await self.sendCommand('set-video-config', { 'follow-input-mode': action.options.mode })
 		},
 	}
 
@@ -300,7 +310,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-audio-config', 'convert-mode=' + action.options.mode)
+			await self.sendCommand('set-audio-config', { 'convert-mode': action.options.mode })
 		},
 	}
 
@@ -316,12 +326,11 @@ export function setActions(self) {
 				max: 20,
 				default: 20.0,
 				step: 0.1,
-				required: true,
 				range: true,
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-audio-config', 'gain=' + action.options.gain)
+			await self.sendCommand('set-audio-config', { gain: action.options.gain })
 		},
 	}
 
@@ -344,7 +353,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-audio-config', 'sample-rate=' + action.options.samplerate)
+			await self.sendCommand('set-audio-config', { 'sample-rate': action.options.samplerate })
 		},
 	}
 
@@ -365,7 +374,7 @@ export function setActions(self) {
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand('set-audio-config', 'channels=' + action.options.channels)
+			await self.sendCommand('set-audio-config', { channels: action.options.channels })
 		},
 	}
 
@@ -376,16 +385,17 @@ export function setActions(self) {
 			{
 				type: 'dropdown',
 				label: 'Preset Name',
+				tooltip:
+					'Select a Source Preset name for decoding. Source Presets can be created, edited and removed in the device web interface. ' +
+					expressionHint,
 				id: 'name',
+				default: '',
 				choices: self.SOURCE_PRESETS,
 				allowCustom: true,
 			},
 		],
 		callback: async (action) => {
-			await self.sendCommand(
-				'set-channel',
-				'ndi-name=' + (action.options.name === '' ? 'true' : 'false') + '&name=' + action.options.name,
-			)
+			await self.selectSource(action.options.name, false)
 		},
 	}
 
@@ -396,19 +406,27 @@ export function setActions(self) {
 			{
 				type: 'number',
 				label: 'Preset #',
+				tooltip:
+					'Position in the device preset list. #0 clears the current source, so the first real preset is #1; ' +
+					'compare against the sourcePresetCount variable. ' +
+					expressionHint,
 				id: 'index',
-				required: true,
 				min: 0,
-				//max: self.SOURCE_PRESETS.length - 1,
+				// max is required by the API. The real bounds check happens in
+				// presetNameByIndex, because a too-tight max here would make the host
+				// reject an out-of-range value and skip the action entirely.
+				max: 999,
+				asInteger: true,
 				default: 0,
 			},
 		],
 		callback: async (action) => {
-			const name =
-				action.options.index >= 0 && action.options.index < self.SOURCE_PRESETS.length
-					? self.SOURCE_PRESETS[action.options.index].id
-					: ''
-			await self.sendCommand('set-channel', 'ndi-name=' + (name === '' ? 'true' : 'false') + '&name=' + name)
+			const name = self.presetNameByIndex(action.options.index)
+			if (name === undefined) {
+				self.log('warn', `No source preset at index ${action.options.index}; ignoring`)
+				return
+			}
+			await self.selectSource(name, false)
 		},
 	}
 
@@ -422,42 +440,37 @@ export function setActions(self) {
 				tooltip: 'Enable to select an available NDI source, otherwise select a source from the preset list',
 				id: 'isNameNDI',
 				default: false,
+				// Referenced by isVisibleExpression below, which is only allowed
+				// for fields that cannot themselves be an expression.
+				disableAutoExpression: true,
 			},
 			{
 				type: 'dropdown',
 				label: 'Preset Name',
 				tooltip:
-					'Select a Source Preset name for decoding. Source Presets can be created, edited and removed in the device web interface.' +
-					'You can also enter another preset name manually or by using variables.',
+					'Select a Source Preset name for decoding. Source Presets can be created, edited and removed in the device web interface. ' +
+					expressionHint,
 				id: 'nameSource',
+				default: '',
 				choices: self.SOURCE_PRESETS,
 				allowCustom: true,
-				useVariables: true,
-				isVisible: (options) => options.isNameNDI === false,
+				isVisibleExpression: '!$(options:isNameNDI)',
 			},
 			{
 				type: 'dropdown',
 				label: 'Source',
 				tooltip:
-					'List of NDI sources currently available for decoding. The list is updated automatically.' +
-					'You can also enter another NDI source name manually or by using variables.',
+					'List of NDI sources currently available for decoding. The list is updated automatically. ' + expressionHint,
 				id: 'nameNDI',
+				default: '',
 				choices: self.NDI_SOURCES,
 				allowCustom: true,
-				useVariables: true,
-				isVisible: (options) => options.isNameNDI === true,
+				isVisibleExpression: '$(options:isNameNDI)',
 			},
 		],
 		callback: async (action) => {
-			const nameSource = await self.parseVariablesInString(action.options.nameSource)
-			const nameNDI = await self.parseVariablesInString(action.options.nameNDI)
-			await self.sendCommand(
-				'set-channel',
-				'ndi-name=' +
-					(action.options.isNameNDI || nameSource === '' ? 'true' : 'false') +
-					'&name=' +
-					(action.options.isNameNDI ? nameNDI : nameSource),
-			)
+			const isNDI = action.options.isNameNDI
+			await self.selectSource(isNDI ? action.options.nameNDI : action.options.nameSource, isNDI)
 		},
 	}
 
@@ -465,7 +478,7 @@ export function setActions(self) {
 		name: 'Reboot',
 		description: 'Reboots the device without any further confirmation',
 		options: [],
-		callback: async (action) => {
+		callback: async () => {
 			await self.sendCommand('reboot')
 		},
 	}

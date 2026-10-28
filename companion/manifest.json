@@ -1,9 +1,11 @@
 {
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
 	"id": "magewell-proconvert-decoder",
 	"name": "magewell-proconvert-decoder",
 	"shortname": "Pro Convert Decoder",
 	"description": "Module to control Magewell Pro Convert Decoders",
-	"version": "3.0.0",
+	"version": "4.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-magewell-proconvert-decoder.git",
 	"bugs": "https://github.com/bitfocus/companion-module-magewell-proconvert-decoder/issues",
@@ -19,7 +21,7 @@
 	],
 	"legacyIds": [],
 	"runtime": {
-		"type": "node22",
+		"type": "node26",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
 		"entrypoint": "../src/index.js"
